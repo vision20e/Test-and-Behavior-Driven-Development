@@ -102,7 +102,7 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(new_product.category, product.category)
 
     #
-      def test_read_a_product(self):
+       def test_read_a_product(self):
         """It should Read a product from the database"""
         product = ProductFactory()
         product.create()
@@ -127,5 +127,64 @@ class TestProductModel(unittest.TestCase):
         # Fetch it again
         updated_product = Product.find(original_id)
         self.assertEqual(updated_product.description, "Updated description")
+
+    def test_delete_a_product(self):
+        """It should Delete a product from the database"""
+        product = ProductFactory()
+        product.create()
+        self.assertIsNotNone(product.id)
+
+        # Delete it
+        product_id = product.id
+        product.delete()
+
+        # Ensure it no longer exists
+        result = Product.find(product_id)
+        self.assertIsNone(result)
+
+    def test_list_all_products(self):
+        """It should List all products in the database"""
+        products = Product.all()
+        self.assertEqual(products, [])
+
+        # Create multiple products
+        product_list = ProductFactory.create_batch(3)
+        for product in product_list:
+            product.create()
+
+        # Fetch all products
+        all_products = Product.all()
+        self.assertEqual(len(all_products), 3)
+
+    def test_find_by_name(self):
+        """It should Find products by name"""
+        product = ProductFactory(name="UniqueName")
+        product.create()
+
+        # Fetch using find_by_name
+        found = Product.find_by_name("UniqueName")
+        self.assertEqual(found[0].name, "UniqueName")
+
+    def test_find_by_category(self):
+        """It should Find products by category"""
+        product = ProductFactory(category=Category.ELECTRONICS)
+        product.create()
+
+        found = Product.find_by_category(Category.ELECTRONICS)
+        self.assertTrue(len(found) > 0)
+        self.assertEqual(found[0].category, Category.ELECTRONICS)
+
+    def test_find_by_availability(self):
+        """It should Find products by availability"""
+        available_product = ProductFactory(available=True)
+        unavailable_product = ProductFactory(available=False)
+        available_product.create()
+        unavailable_product.create()
+
+        available = Product.find_by_availability(True)
+        unavailable = Product.find_by_availability(False)
+
+        self.assertTrue(all(p.available for p in available))
+        self.assertTrue(all(not p.available for p in unavailable))
 
     #
